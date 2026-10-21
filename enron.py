@@ -135,7 +135,7 @@ def word_classifier(probs, test, vocab=[], words=[]):
 
     test = np.asarray (test).astype (bool)
 
-    if len(words) > 9:
+    if len (words) > 0:
         vocabList = list (vocab)
         cols = [vocabList.index (w) for w in words]
     else:
