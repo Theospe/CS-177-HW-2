@@ -92,7 +92,18 @@ def compute_word_probs(features, labels):
         for each vocab word and the second row contains P(X_i | Y = spam)
 
     '''
-    probs = None
+
+    features = np.asarray (features)
+    labels = np.asarray (labels)
+
+    ham = features[labels == 0]
+    spam = features[labels == 1]
+
+    probsHam = np.sum (ham, axis = 0) / len (ham)
+    probsSpam = np.sum (spam, axis = 0) / len (spam)
+
+    probs = np.vstack ([probsHam, probsSpam])
+
     return probs
 
 
@@ -121,7 +132,27 @@ def word_classifier(probs, test, vocab=[], words=[]):
         A vector of predicted labels for the test set
 
     '''
-    predictions = None
+
+    test = np.asarray (test).astype (bool)
+
+    if len(words) > 9:
+        vocabList = list (vocab)
+        cols = [vocabList.index (w) for w in words]
+    else:
+        cols = np.arange (probs.shape[1])
+
+    pHam = probs[0, cols]
+
+    pSpam = probs[1, cols]
+
+    X = test[:, cols]
+
+    with np.errstate (divide = 'ignore'):
+            logHam = np.sum (np.where (X, np.log (pHam), np.log (1 - pHam)), axis = 1)
+            logSpam = np.sum (np.where (X, np.log (pSpam), np.log (1 - pSpam)), axis = 1)
+
+    predictions = (logSpam > logHam).astype (int)
+
     return predictions
 
 def compute_accuracy(predictedLabels, trueLabels):
@@ -141,7 +172,9 @@ def compute_accuracy(predictedLabels, trueLabels):
     accuracy :
         The fraction of correctly classified emails.
     '''
-    accuracy = None
+
+    accuracy = np.mean (np.asarray (predictedLabels) == np.asarray (trueLabels))
+
     return accuracy
 
 
